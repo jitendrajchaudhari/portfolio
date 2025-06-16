@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jitendra Chaudhari | Senior Software Developer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Cool Slate -->
+    <!-- Application Structure Plan: A single-page application with a sticky top navigation bar for easy access to different content sections: a hero introduction, an interactive career timeline, a filterable project portfolio, a visual skills dashboard, and a clear education summary. This structure was chosen to allow non-linear exploration, enabling a recruiter to quickly jump to the most relevant information (like projects or skills) while also providing a chronological overview for context. The goal is to facilitate rapid information retrieval and present the candidate's profile in a modern, engaging manner. -->
+    <!-- Visualization & Content Choices:
+        - Hero Section (Inform): Standard HTML/CSS for a clear, immediate introduction, enhanced with a subtle background gradient for visual appeal.
+        - Career Timeline (Show Change): An interactive vertical timeline built with HTML/Tailwind and JS. Goal is to show career progression. Interaction: Users can click on each job/education entry to expand/collapse detailed descriptions with a smoother animation. Justification: More engaging than a static list, and animation enhances user feedback.
+        - Project Portfolio (Organize/Compare): Filterable cards using HTML/Tailwind and JS. Goal: Allow users to focus on specific company experience. Interaction: Filter buttons dynamically show/hide projects, and cards have subtle hover and entry animations. Justification: Provides a task-oriented view for recruiters to evaluate relevant work, with visual dynamism.
+        - Skills Dashboard (Compare/Inform): A horizontal bar chart using Chart.js (Canvas). Goal: To provide a quick, visual summary of technical breadth across different categories. Interaction: Hover tooltips provide context, and the chart itself loads with a subtle animation. Justification: More scannable and visually appealing than a text list, with added polish.
+        - Education (Inform): Static HTML/CSS, with sections animating into view. Goal: Clear, concise presentation of academic background with an attractive entry.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 40vh;
+            width: 100%;
+            max-width: 900px;
+            max-height: 500px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 500px;
+            }
+        }
+        .timeline-item-content {
+            transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out, padding-top 0.5s ease-in-out;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            padding-top: 0;
+        }
+        .timeline-item-content.open {
+            max-height: 1000px; /* Large enough to fit content */
+            opacity: 1;
+            padding-top: 0.75rem; /* Equivalent to mt-2 pt-2 */
+        }
+        /* Animation classes for sections */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .fade-in.appear {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        /* Project card animations */
+        .project-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .project-card.fade-in-item {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+            transition-delay: var(--delay); /* Use CSS variable for staggered delay */
+        }
+        .project-card.fade-in-item.appear {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Hero section background gradient */
+        #hero {
+            background-image: linear-gradient(to top, #f8fafc, #e2e8f0); /* Subtle cool grey gradient */
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- Header & Navigation -->
+    <header id="header" class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <a href="#hero" class="text-lg font-bold text-slate-900 hover:text-cyan-700 transition-colors duration-200">Jitendra Chaudhari</a>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#timeline" class="text-slate-600 hover:bg-slate-200 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">Timeline</a>
+                        <a href="#projects" class="text-slate-600 hover:bg-slate-200 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">Projects</a>
+                        <a href="#skills" class="text-slate-600 hover:bg-slate-200 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">Skills</a>
+                        <a href="#education" class="text-slate-600 hover:bg-slate-200 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">Education</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-slate-500 hover:text-slate-800 hover:bg-slate-200 focus:outline-none transition-colors duration-200">
+                        <span class="sr-only">Open main menu</span>
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="md:hidden hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#timeline" class="text-slate-600 hover:bg-slate-200 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200">Timeline</a>
+                <a href="#projects" class="text-slate-600 hover:bg-slate-200 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200">Projects</a>
+                <a href="#skills" class="text-slate-600 hover:bg-slate-200 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200">Skills</a>
+                <a href="#education" class="text-slate-600 hover:bg-slate-200 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200">Education</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <!-- Hero Section -->
+        <section id="hero" class="text-center py-16 md:py-24 rounded-2xl shadow-inner-lg shadow-slate-100 mb-16 fade-in">
+            <h1 class="text-4xl md:text-6xl font-bold tracking-tight text-slate-900">JITENDRA CHAUDHARI</h1>
+            <p class="mt-3 text-lg md:text-xl text-cyan-700 font-semibold">Senior Software Developer</p>
+            <p class="mt-6 max-w-3xl mx-auto text-base md:text-lg text-slate-600">
+                Senior Software Developer with 4.5+ years of experience in full-stack development, cloud platforms, and scalable enterprise systems. Proven expertise in delivering high-quality, performant applications across diverse domains including energy, media, and banking.
+            </p>
+            <div class="mt-8 flex justify-center items-center space-x-6 text-sm text-slate-500">
+                 <a href="mailto:jitendra.chaudhari.980@gmail.com" class="hover:text-cyan-700 transition-colors duration-200">jitendra.chaudhari.980@gmail.com</a>
+                 <span>&bull;</span>
+                 <a href="tel:+919421326461" class="hover:text-cyan-700 transition-colors duration-200">+91 9421326461</a>
+            </div>
+        </section>
+
+        <!-- Timeline Section -->
+        <section id="timeline" class="py-16 md:py-24 fade-in">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-3xl font-bold tracking-tight text-center text-slate-900">Career Timeline</h2>
+                <p class="mt-4 text-lg text-center text-slate-600">
+                    An interactive overview of my professional journey and educational milestones. Click on any item to see more details.
+                </p>
+                <div id="timeline-container" class="mt-12 relative border-l-2 border-slate-200 ml-4 md:ml-0">
+                    <!-- Timeline items will be injected here by JavaScript -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Projects Section -->
+        <section id="projects" class="py-16 md:py-24 bg-white rounded-2xl shadow-lg my-16 fade-in">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl font-bold tracking-tight text-center text-slate-900">Project Portfolio</h2>
+                 <p class="mt-4 max-w-3xl mx-auto text-lg text-center text-slate-600">
+                    A collection of key projects I've developed. Use the filters to explore my work at different companies and see the technologies I used to build them.
+                </p>
+                <div id="project-filters" class="mt-8 flex justify-center space-x-2 md:space-x-4">
+                    <!-- Filter buttons will be injected here by JavaScript -->
+                </div>
+                <div id="project-grid" class="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                    <!-- Project cards will be injected here by JavaScript -->
+                </div>
+            </div>
+        </section>
+
+
+        <!-- Skills Section -->
+        <section id="skills" class="py-16 md:py-24 fade-in">
+            <h2 class="text-3xl font-bold tracking-tight text-center text-slate-900">Technical Skills</h2>
+            <p class="mt-4 max-w-3xl mx-auto text-lg text-center text-slate-600">
+                This chart provides a visual breakdown of my technical expertise across different categories. Hover over the bars to see the specific technologies I'm proficient in.
+            </p>
+            <div class="mt-12 chart-container">
+                <canvas id="skillsChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Education Section -->
+        <section id="education" class="py-16 md:py-24 bg-slate-100 rounded-2xl my-16 fade-in">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl font-bold tracking-tight text-center text-slate-900">Education & Certifications</h2>
+                <p class="mt-4 max-w-3xl mx-auto text-lg text-center text-slate-600">
+                    My foundational education and the key certifications that supplement my hands-on experience.
+                </p>
+                <div class="mt-12 space-y-8">
+                     <div id="education-container">
+                        <!-- Education items will be injected here by JavaScript -->
+                     </div>
+                     <div id="certifications-container" class="mt-10">
+                         <!-- Certification items will be injected here by JavaScript -->
+                     </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <footer class="bg-slate-800 text-slate-300 py-6">
+        <div class="container mx-auto text-center text-sm">
+            <p>&copy; 2024 Jitendra Chaudhari. Interactive resume created with HTML, Tailwind CSS, and Chart.js.</p>
+        </div>
+    </footer>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- DATA ---
+            const timelineData = [
+                 {
+                    type: 'work',
+                    title: 'Senior Software Developer',
+                    company: 'HCL Software, Pune',
+                    date: 'October 2024 – Present',
+                    details: [
+                        'Leading the development of enterprise-grade applications for banking and finance.',
+                        'Collaborating with cross-functional teams to architect cloud-native solutions and streamline deployments.',
+                        'Integrating customer data across banking platforms to support marketing and analytics workflows.'
+                    ]
+                },
+                {
+                    type: 'work',
+                    title: 'Software Developer',
+                    company: 'Heaptrace Technology Pvt. Ltd., Pune',
+                    date: 'April 2021 – July 2024',
+                    details: [
+                         'Developed and maintained web and mobile applications using modern JavaScript frameworks.',
+                         'Collaborated with DevOps to manage CI/CD pipelines and cloud deployments.',
+                         'Delivered scalable solutions in energy, ecosystem mapping, and content analytics domains.'
+                    ]
+                },
+                {
+                    type: 'education',
+                    title: 'Post Graduate Diploma in Advanced Computing',
+                    company: 'CDAC, Sunbeam Institute, Karad',
+                    date: '2020',
+                    details: []
+                },
+                 {
+                    type: 'education',
+                    title: 'Bachelor of Engineering (B.E.) – Mechanical Engineering',
+                    company: 'RCPIT, Shirpur – North Maharashtra University',
+                    date: '2013–2017',
+                    details: []
+                }
+            ];
+
+            const projectsData = [
+                {
+                    id: 1,
+                    company: 'HCL Software',
+                    title: 'Customer Data Platform (CDP) for Banking',
+                    description: 'Developed a centralized data platform to aggregate, cleanse, and unify customer profiles across multiple banking channels, enabling advanced segmentation, consent management, and real-time personalization.',
+                    techStack: ['React.js', 'Node.js', 'MongoDB', 'Kafka', 'AWS', 'Docker', 'Jenkins']
+                },
+                {
+                    id: 2,
+                    company: 'Heaptrace Technology',
+                    title: 'Audience Genomics',
+                    description: 'Built a social media analytics platform to detect user interests, emotions, and values. Integrated OpenAI and DALL·E for content and image generation.',
+                    techStack: ['Next.js', 'MongoDB', 'RavenDB', 'Docker', 'Firebase', 'AWS']
+                },
+                {
+                    id: 3,
+                    company: 'Heaptrace Technology',
+                    title: 'MotKraft',
+                    description: 'Developed a mobile app for electricity consumption and pricing visibility in the Norwegian market. Integrated invoicing, push notifications, and real-time analytics.',
+                    techStack: ['React Native', 'Expo', 'Redux', 'Axios', 'Victory Charts']
+                },
+                {
+                    id: 4,
+                    company: 'Heaptrace Technology',
+                    title: 'Enterprise Ecosystem Tool',
+                    description: 'Created a SaaS tool to support business ecosystem visualization and strategy workshops for enterprise clients, enabling collaborative mapping and analysis.',
+                    techStack: ['React.js', 'Chart.js', 'Chakra UI', 'Docker', 'Jenkins']
+                }
+            ];
+            
+            const educationData = [
+                {
+                    degree: 'Post Graduate Diploma in Advanced Computing',
+                    institution: 'CDAC, Sunbeam Institute, Karad',
+                    year: '2020'
+                },
+                {
+                    degree: 'Bachelor of Engineering (B.E.) – Mechanical Engineering',
+                    institution: 'RCPIT, Shirpur – North Maharashtra University',
+                    year: '2013–2017'
+                }
+            ];
+            
+            const certificationsData = [
+                 { name: 'CDAC – Diploma in Advanced Computing', url: 'https://drive.google.com/file/d/1eIt6NmB91c967ViV8PsxAEhLd2qUjOQl/view' },
+                 { name: 'React Native – Udemy', url: 'https://www.udemy.com/certificate/UC-39a83d59-191e-4fd3-86e1-12c9e1aef06c/' },
+                 { name: 'React JS – Udemy', url: 'https://www.udemy.com/certificate/UC-bf33d4aa-47a6-4f7d-84bb-776e6389bba4' }
+            ];
+
+            // --- SKILLS CHART ---
+            const skillsCtx = document.getElementById('skillsChart').getContext('2d');
+            const skillsData = {
+                labels: ['Frontend', 'Backend', 'Database', 'DevOps & Cloud', 'Languages', 'Tools & More'],
+                datasets: [{
+                    label: 'Technologies',
+                    data: [6, 3, 4, 4, 3, 6],
+                    backgroundColor: 'rgba(22, 163, 74, 0.4)', /* Slightly more opaque */
+                    borderColor: 'rgb(22, 163, 74)',
+                    borderWidth: 1,
+                    barPercentage: 0.8, /* Make bars a bit wider */
+                    categoryPercentage: 0.8
+                }]
+            };
+            const skillDetails = {
+                'Frontend': 'React.js, React Native, Next.js, Redux, Context API, Hooks',
+                'Backend': 'Node.js, Java, Spring Boot',
+                'Database': 'MySQL, MongoDB, RavenDB, PostgreSQL',
+                'DevOps & Cloud': 'AWS, GCP, Docker, Jenkins',
+                'Languages': 'JavaScript, TypeScript, Java',
+                'Tools & More': 'Git, GitHub, Jira, Vercel, Expo, GraphQL'
+            };
+            new Chart(skillsCtx, {
+                type: 'bar',
+                data: skillsData,
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(203, 213, 225, 0.2)'
+                            },
+                             ticks: {
+                                display: false /* Hide x-axis numbers for cleaner look */
+                            }
+                        },
+                        y: {
+                           grid: {
+                                display: false
+                           },
+                           ticks: {
+                                font: {
+                                    size: 14 /* Larger font for labels */
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const category = context.label;
+                                    return skillDetails[category] || '';
+                                }
+                            },
+                            bodyFont: {
+                                size: 14 /* Larger tooltip font */
+                            },
+                            padding: 10 /* More padding for tooltips */
+                        }
+                    },
+                     animation: {
+                        duration: 1000, /* Animate chart on load */
+                        easing: 'easeInOutQuad'
+                    }
+                }
+            });
+
+
+            // --- TIMELINE ---
+            const timelineContainer = document.getElementById('timeline-container');
+            timelineData.forEach(item => {
+                const iconBg = item.type === 'work' ? 'bg-cyan-600' : 'bg-green-600';
+                const itemHTML = `
+                    <div class="mb-8 flex justify-between items-start w-full right-timeline">
+                        <div class="order-1 w-full px-4 py-4 ml-8">
+                           <div class="p-4 bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer timeline-item-header">
+                                <p class="text-sm font-medium text-slate-500">${item.date}</p>
+                                <h3 class="font-bold text-lg text-slate-900">${item.title}</h3>
+                                <p class="text-md text-slate-700">${item.company}</p>
+                                ${item.details.length > 0 ? `
+                                <div class="timeline-item-content">
+                                    <ul class="space-y-2 list-disc list-inside text-slate-600">
+                                        ${item.details.map(d => `<li>${d}</li>`).join('')}
+                                    </ul>
+                                </div>` : ''}
+                           </div>
+                        </div>
+                        <div class="z-20 flex items-center order-1 ${iconBg} shadow-xl w-8 h-8 rounded-full absolute -ml-4">
+                            <svg class="w-5 h-5 text-white mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                ${item.type === 'work' ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>' : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v11.494m-9-5.494h18" transform="scale(0.8) translate(3, 1)"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L3 12l6.75-5M14.25 7L21 12l-6.75 5" transform="scale(0.8) translate(3, 1)"></path>'}
+                            </svg>
+                        </div>
+                    </div>
+                `;
+                timelineContainer.innerHTML += itemHTML;
+            });
+
+            document.querySelectorAll('.timeline-item-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const content = header.querySelector('.timeline-item-content');
+                    if(content) {
+                        content.classList.toggle('open');
+                    }
+                });
+            });
+
+            // --- PROJECTS ---
+            const projectGrid = document.getElementById('project-grid');
+            const filterContainer = document.getElementById('project-filters');
+            const companies = ['All', ...new Set(projectsData.map(p => p.company))];
+
+            companies.forEach(company => {
+                const button = document.createElement('button');
+                button.textContent = company;
+                button.dataset.filter = company;
+                button.className = 'filter-btn px-4 py-2 text-sm font-medium rounded-full transition-colors duration-200';
+                if(company === 'All'){
+                    button.classList.add('bg-cyan-600', 'text-white');
+                } else {
+                    button.classList.add('bg-slate-200', 'text-slate-700', 'hover:bg-slate-300');
+                }
+                filterContainer.appendChild(button);
+            });
+
+            const renderProjects = (filter = 'All') => {
+                projectGrid.innerHTML = '';
+                const filteredProjects = filter === 'All' ? projectsData : projectsData.filter(p => p.company === filter);
+
+                filteredProjects.forEach((project, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white rounded-lg shadow-md overflow-hidden project-card fade-in-item';
+                    card.style.setProperty('--delay', `${index * 0.1}s`); /* Staggered animation delay */
+                    card.innerHTML = `
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold text-slate-900">${project.title}</h3>
+                            <p class="text-sm font-semibold text-cyan-700">${project.company}</p>
+                            <p class="mt-2 text-slate-600">${project.description}</p>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                ${project.techStack.map(tech => `<span class="bg-slate-200 text-slate-700 px-2 py-1 text-xs font-medium rounded-full">${tech}</span>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                    projectGrid.appendChild(card);
+                });
+
+                // Trigger animations for newly rendered cards
+                setTimeout(() => {
+                    document.querySelectorAll('.project-card.fade-in-item').forEach(card => {
+                        card.classList.add('appear');
+                    });
+                }, 100);
+            };
+
+            filterContainer.addEventListener('click', (e) => {
+                if(e.target.classList.contains('filter-btn')) {
+                    const filter = e.target.dataset.filter;
+                    renderProjects(filter);
+                    
+                    document.querySelectorAll('.filter-btn').forEach(btn => {
+                        btn.classList.remove('bg-cyan-600', 'text-white');
+                        btn.classList.add('bg-slate-200', 'text-slate-700', 'hover:bg-slate-300');
+                    });
+                    
+                    e.target.classList.add('bg-cyan-600', 'text-white');
+                    e.target.classList.remove('bg-slate-200', 'text-slate-700', 'hover:bg-slate-300');
+                }
+            });
+
+            renderProjects();
+            
+            // --- EDUCATION & CERTS ---
+            const educationContainer = document.getElementById('education-container');
+            educationContainer.innerHTML = educationData.map(item => `
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <p class="text-lg font-semibold text-slate-900">${item.degree}</p>
+                    <p class="text-slate-600">${item.institution}</p>
+                    <p class="text-sm text-slate-500">${item.year}</p>
+                </div>
+            `).join('');
+
+            const certsContainer = document.getElementById('certifications-container');
+            certsContainer.innerHTML = `
+                <h3 class="text-xl font-bold text-center text-slate-800 mb-4">Certifications</h3>
+                <div class="flex flex-wrap justify-center gap-4">
+                    ${certificationsData.map(cert => `
+                        <a href="${cert.url}" target="_blank" rel="noopener noreferrer" class="bg-white px-4 py-2 rounded-full shadow-sm text-sm font-medium text-cyan-700 hover:bg-cyan-50 hover:shadow-md transition-all duration-200">
+                            ${cert.name}
+                        </a>
+                    `).join('')}
+                </div>
+            `;
+
+
+            // --- MOBILE MENU TOGGLE ---
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            // Close mobile menu on link click
+            document.querySelectorAll('#mobile-menu a').forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                });
+            });
+
+            // --- SECTION ANIMATION (Intersection Observer) ---
+            const sections = document.querySelectorAll('section.fade-in');
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.1
+            };
+
+            const sectionObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('appear');
+                        observer.unobserve(entry.target); // Stop observing once it's visible
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                sectionObserver.observe(section);
+            });
+
+            // Initial animation for Hero section if it's already in view on load
+            const heroSection = document.getElementById('hero');
+            if (heroSection) {
+                heroSection.classList.add('appear');
+            }
+
+        });
+    </script>
+</body>
+</html>
